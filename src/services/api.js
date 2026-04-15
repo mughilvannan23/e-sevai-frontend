@@ -42,7 +42,6 @@ api.interceptors.response.use(
 // Auth endpoints
 export const authAPI = {
   adminLogin: (data) => api.post('/auth/admin/login', data),
-  verifyOTP: (data) => api.post('/auth/admin/verify-otp', data),
   employeeLogin: (data) => api.post('/auth/employee/login', data),
   getProfile: () => api.get('/auth/profile'),
   changePassword: (data) => api.put('/auth/change-password', data),

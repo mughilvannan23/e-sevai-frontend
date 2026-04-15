@@ -8,23 +8,15 @@ const Login = () => {
 
   const [isEmployee, setIsEmployee] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const [otpData, setOtpData] = useState({ email: '', otp: '' });
-  const [showOTP, setShowOTP] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { login, verifyOTP, error, clearError } = useAuth();
+  const { login, error, clearError } = useAuth();
   const { error: toastError, success } = useToast();
 
   // Handle login input
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Handle OTP input
-  const handleOTPChange = (e) => {
-    const { value } = e.target;
-    setOtpData(prev => ({ ...prev, otp: value }));
   };
 
   // ✅ LOGIN SUBMIT
@@ -36,20 +28,13 @@ const Login = () => {
     try {
       const result = await login(formData, isEmployee);
 
-      if (isEmployee) {
-        success('Login successful!');
+      success('Login successful!');
 
-        // 🔥 Employee direct redirect
+      // 🔥 Direct redirect based on role
+      if (isEmployee) {
         navigate('/employee/dashboard');
       } else {
-        // Admin → show OTP
-        setOtpData({
-          email: result.email || formData.email,
-          otp: ''
-        });
-
-        setShowOTP(true);
-        success('OTP sent to your email!');
+        navigate('/admin/dashboard');
       }
     } catch (err) {
       toastError(err.message || 'Login failed');
@@ -58,116 +43,54 @@ const Login = () => {
     }
   };
 
-  // ✅ OTP VERIFY
-  const handleOTPSubmit = async (e) => {
-    e.preventDefault();
-    clearError();
-    setLoading(true);
-
-    try {
-      const res = await verifyOTP(otpData);
-
-      success('Login successful!');
-
-      // 🔥 FINAL REDIRECT FIX
-      if (res.user.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/employee/dashboard');
-      }
-
-    } catch (err) {
-      toastError(err.message || 'OTP verification failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBack = () => {
-    setShowOTP(false);
-    setOtpData({ email: '', otp: '' });
-  };
-
   return (
     <div style={styles.container}>
       <div style={styles.card}>
         <h2 style={styles.title}>e-Sevai Login</h2>
 
         {/* ================= LOGIN FORM ================= */}
-        {!showOTP && (
-          <form onSubmit={handleSubmit} style={styles.form}>
-            <div>
-              <label>Login Type</label><br />
-              <input
-                type="radio"
-                checked={!isEmployee}
-                onChange={() => setIsEmployee(false)}
-              /> Admin
-              <input
-                type="radio"
-                checked={isEmployee}
-                onChange={() => setIsEmployee(true)}
-                style={{ marginLeft: "10px" }}
-              /> Employee
-            </div>
-
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <div>
+            <label>Login Type</label><br />
             <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-              style={styles.input}
-            />
-
+              type="radio"
+              checked={!isEmployee}
+              onChange={() => setIsEmployee(false)}
+            /> Admin
             <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-              style={styles.input}
-            />
+              type="radio"
+              checked={isEmployee}
+              onChange={() => setIsEmployee(true)}
+              style={{ marginLeft: "10px" }}
+            /> Employee
+          </div>
 
-            {error && <p style={styles.error}>{error}</p>}
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleInputChange}
+            required
+            style={styles.input}
+          />
 
-            <button disabled={loading} style={styles.button}>
-              {loading ? "Loading..." : "Login"}
-            </button>
-          </form>
-        )}
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleInputChange}
+            required
+            style={styles.input}
+          />
 
-        {/* ================= OTP FORM ================= */}
-        {showOTP && (
-          <form onSubmit={handleOTPSubmit} style={styles.form}>
-            <p>OTP sent to <b>{otpData.email}</b></p>
+          {error && <p style={styles.error}>{error}</p>}
 
-            <input
-              type="text"
-              maxLength="6"
-              placeholder="Enter OTP"
-              value={otpData.otp}
-              onChange={handleOTPChange}
-              style={styles.otp}
-              required
-            />
-
-            {error && <p style={styles.error}>{error}</p>}
-
-            <button
-              disabled={loading || otpData.otp.length !== 6}
-              style={styles.button}
-            >
-              {loading ? "Verifying..." : "Verify OTP"}
-            </button>
-
-            <button type="button" onClick={handleBack} style={styles.back}>
-              Back
-            </button>
-          </form>
-        )}
+          <button disabled={loading} style={styles.button}>
+            {loading ? "Loading..." : "Login"}
+          </button>
+        </form>
       </div>
     </div>
   );

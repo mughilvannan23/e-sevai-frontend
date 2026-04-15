@@ -49,18 +49,12 @@ export const AuthProvider = ({ children }) => {
       console.log('[AuthContext] response.data:', response.data);
 
       if (response.data.success) {
-        if (isEmployee) {
-          // Employee login successful
-          console.log('[AuthContext] Employee login successful');
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
-          setUser(response.data.user);
-          return { success: true, user: response.data.user };
-        } else {
-          // Admin login - OTP sent, need to verify
-          console.log('[AuthContext] Admin login - OTP sent, email:', response.data.email);
-          return { success: true, email: response.data.email };
-        }
+        // Both admin and employee login successful
+        console.log('[AuthContext] Login successful');
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        setUser(response.data.user);
+        return { success: true, user: response.data.user };
       } else {
         // Response was not successful
         const errorMessage = response.data.message || 'Login failed';
@@ -71,37 +65,6 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('[AuthContext] Login error:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Login failed';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifyOTP = async (otpData) => {
-    console.log('[AuthContext] verifyOTP called with:', otpData);
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await authAPI.verifyOTP(otpData);
-      console.log('[AuthContext] OTP verification response:', response);
-      
-      if (response.data.success) {
-        console.log('[AuthContext] OTP verified successfully');
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        setUser(response.data.user);
-        return { success: true, user: response.data.user };
-      } else {
-        const errorMessage = response.data.message || 'OTP verification failed';
-        console.error('[AuthContext] OTP verification failed:', errorMessage);
-        setError(errorMessage);
-        throw new Error(errorMessage);
-      }
-    } catch (error) {
-      console.error('[AuthContext] OTP verification error:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'OTP verification failed';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -126,7 +89,6 @@ export const AuthProvider = ({ children }) => {
     loading,
     error,
     login,
-    verifyOTP,
     logout,
     clearError,
     isAuthenticated: !!user,
